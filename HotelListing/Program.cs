@@ -1,3 +1,6 @@
+using HotelListing.Configurations;
+using HotelListing.Data;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Serilog;
 using Serilog.Events;
@@ -14,9 +17,10 @@ Log.Logger = new LoggerConfiguration()
 
 builder.Host.UseSerilog();
 
-// Add services to the container.
-
-builder.Services.AddControllers();
+builder.Services.AddDbContext<DatabaseContext>(options =>
+{
+    options.UseSqlServer(builder.Configuration.GetConnectionString("sqlConnection"));
+});
 
 // Configure Cross Origin Resource Sharing
 builder.Services.AddCors(config =>
@@ -29,10 +33,16 @@ builder.Services.AddCors(config =>
     });
 });
 
+builder.Services.AddAutoMapper(typeof(MapperInitializer));
+
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "HotelListing", Version = "v1" });
 });
+
+// Add services to the container.
+
+builder.Services.AddControllers();
 
 var app = builder.Build();
 
