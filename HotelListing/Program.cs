@@ -1,5 +1,7 @@
 using HotelListing.Configurations;
 using HotelListing.Data;
+using HotelListing.IRepository;
+using HotelListing.Repository;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Serilog;
@@ -34,6 +36,7 @@ builder.Services.AddCors(config =>
 });
 
 builder.Services.AddAutoMapper(typeof(MapperInitializer));
+builder.Services.AddTransient<IUnitWork, UnitOfWork>();
 
 builder.Services.AddSwaggerGen(c =>
 {
@@ -42,7 +45,11 @@ builder.Services.AddSwaggerGen(c =>
 
 // Add services to the container.
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+                .AddNewtonsoftJson(config =>
+                {
+                    config.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+                });
 
 var app = builder.Build();
 
@@ -60,9 +67,15 @@ app.UseHttpsRedirection();
 
 app.UseCors("AllowAll");
 
+app.UseRouting();
+
 app.UseAuthorization();
 
-app.MapControllers();
+app.UseEndpoints(endpoints =>
+{
+
+    endpoints.MapControllers();
+});
 
 try
 {
